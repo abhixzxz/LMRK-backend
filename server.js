@@ -4,20 +4,8 @@ const sql = require("mssql");
 require("dotenv").config();
 
 const app = express();
-const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173']; // Default to localhost for dev
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
-}));
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // MS SQL config
@@ -31,7 +19,7 @@ const config = {
     trustServerCertificate: true, // Change to true for local dev / self-signed certs
   },
   connectionTimeout: 5000, // 5 second timeout
-  requestTimeout: 10000,   // 10 second timeout
+  requestTimeout: 10000, // 10 second timeout
 };
 
 // Global connection pool
@@ -43,7 +31,7 @@ async function initializeDatabase() {
     if (globalPool) {
       return globalPool;
     }
-    
+
     console.log("Connecting to database...");
     globalPool = await sql.connect(config);
     console.log("Database connected successfully");
@@ -72,7 +60,7 @@ app.get("/api/health", (req, res) => {
   const status = {
     server: "running",
     database: globalPool ? "connected" : "disconnected",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
   res.json(status);
 });
@@ -84,14 +72,16 @@ app.get("/api/branches", async (req, res) => {
     const result = await pool
       .request()
       .query("SELECT Br_Name FROM Gen_BranchDetails_P_Tbl");
-    
+
     // Extract branch names from the result
-    const branches = result.recordset.map(record => record.Br_Name);
-    
+    const branches = result.recordset.map((record) => record.Br_Name);
+
     res.json({ branches });
   } catch (err) {
     console.error("Error fetching branches:", err.message);
-    res.status(500).json({ message: "Failed to fetch branch list from database." });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch branch list from database." });
   }
 });
 
@@ -126,7 +116,9 @@ app.post("/api/login", async (req, res) => {
     }
   } catch (err) {
     console.error("Database error during login:", err.message);
-    res.status(500).json({ message: "Database connection error during login." });
+    res
+      .status(500)
+      .json({ message: "Database connection error during login." });
   }
 });
 
@@ -163,7 +155,9 @@ app.post("/api/issues", async (req, res) => {
     res.status(200).json({ message: "Issue inserted successfully" });
   } catch (err) {
     console.error("Database error during issue insertion:", err.message);
-    res.status(500).json({ error: "Database connection error during issue insertion." });
+    res
+      .status(500)
+      .json({ error: "Database connection error during issue insertion." });
   }
 });
 
@@ -181,15 +175,15 @@ app.post("/api/reports/high-value", async (req, res) => {
     } = req.body;
 
     const pool = await getDbConnection();
-    
+
     // Execute the specific stored procedure AuditHVTranRpt_Sp with correct parameter names
     const result = await pool
       .request()
       .input("Br_Name", sql.VarChar(20), branchName || "ALL")
-      .input("Section", sql.VarChar(20), section || "DEPOSIT") 
+      .input("Section", sql.VarChar(20), section || "DEPOSIT")
       .input("Scheme", sql.VarChar(30), scheme || "ALL")
-      .input("Amount", sql.Decimal(18,2), parseFloat(minAmount || "0"))
-      .input("Amount2", sql.Decimal(18,2), parseFloat(maxAmount || "0"))
+      .input("Amount", sql.Decimal(18, 2), parseFloat(minAmount || "0"))
+      .input("Amount2", sql.Decimal(18, 2), parseFloat(maxAmount || "0"))
       .input("Frdate", sql.Date, fromDate)
       .input("Todate", sql.Date, toDate)
       .execute("[dbo].[AuditHVTranRpt_Sp]");
@@ -198,10 +192,12 @@ app.post("/api/reports/high-value", async (req, res) => {
   } catch (err) {
     console.error("Error fetching high value transactions:", err.message);
     console.error("Full error:", err);
-    res.status(500).json({ 
-      message: "Failed to fetch high value transaction report from database: " + err.message,
+    res.status(500).json({
+      message:
+        "Failed to fetch high value transaction report from database: " +
+        err.message,
       error: err.message,
-      details: err.toString()
+      details: err.toString(),
     });
   }
 });
@@ -215,7 +211,9 @@ app.post("/api/complaint-report", async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("Error executing ComplaintRegister_Sp:", err.message);
-    res.status(500).json({ message: "Failed to fetch complaint report from database." });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch complaint report from database." });
   }
 });
 
@@ -223,9 +221,7 @@ app.post("/api/complaint-report", async (req, res) => {
 app.get("/api/debug/procedure-params", async (req, res) => {
   try {
     const pool = await getDbConnection();
-    const result = await pool
-      .request()
-      .query(`
+    const result = await pool.request().query(`
         SELECT 
           PARAMETER_NAME,
           DATA_TYPE,
@@ -235,7 +231,7 @@ app.get("/api/debug/procedure-params", async (req, res) => {
         WHERE SPECIFIC_NAME = 'AuditHVTranRpt_Sp'
         ORDER BY ORDINAL_POSITION
       `);
-    
+
     res.json({ parameters: result.recordset });
   } catch (err) {
     console.error("Error fetching procedure parameters:", err.message);
@@ -247,9 +243,7 @@ app.get("/api/debug/procedure-params", async (req, res) => {
 app.get("/api/debug/procedures", async (req, res) => {
   try {
     const pool = await getDbConnection();
-    const result = await pool
-      .request()
-      .query(`
+    const result = await pool.request().query(`
         SELECT name 
         FROM sys.procedures 
         WHERE name LIKE '%audit%' 
@@ -258,7 +252,7 @@ app.get("/api/debug/procedures", async (req, res) => {
            OR name LIKE '%HV%'
         ORDER BY name
       `);
-    
+
     res.json({ procedures: result.recordset });
   } catch (err) {
     console.error("Error fetching stored procedures:", err.message);
@@ -270,38 +264,44 @@ app.get("/api/debug/procedures", async (req, res) => {
 app.post("/api/debug/test-hvtran", async (req, res) => {
   try {
     const pool = await getDbConnection();
-    
+
     // First, let's test if we can call the procedure with minimal parameters
     console.log("Testing AuditHVTranRpt_Sp execution...");
-    
+
     const result = await pool
       .request()
       .input("Br_Name", sql.VarChar(20), "ALL")
       .input("Section", sql.VarChar(20), "DEPOSIT")
       .input("Scheme", sql.VarChar(30), "ALL")
-      .input("Amount", sql.Decimal(18,2), 0)
-      .input("Amount2", sql.Decimal(18,2), 999999)
+      .input("Amount", sql.Decimal(18, 2), 0)
+      .input("Amount2", sql.Decimal(18, 2), 999999)
       .input("Frdate", sql.Date, "2024-01-01")
       .input("Todate", sql.Date, "2024-12-31")
       .execute("[dbo].[AuditHVTranRpt_Sp]");
 
     console.log("Procedure executed successfully");
-    console.log("Result recordsets:", result.recordsets ? result.recordsets.length : 0);
-    console.log("Result recordset:", result.recordset ? result.recordset.length : 0);
-    
-    res.json({ 
+    console.log(
+      "Result recordsets:",
+      result.recordsets ? result.recordsets.length : 0
+    );
+    console.log(
+      "Result recordset:",
+      result.recordset ? result.recordset.length : 0
+    );
+
+    res.json({
       success: true,
       recordsets: result.recordsets ? result.recordsets.length : 0,
       recordset: result.recordset ? result.recordset.length : 0,
-      data: result.recordset || []
+      data: result.recordset || [],
     });
   } catch (err) {
     console.error("Error in test procedure:", err.message);
     console.error("Full error:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: err.message,
-      details: err.toString()
+      details: err.toString(),
     });
   }
 });
@@ -309,15 +309,15 @@ app.post("/api/debug/test-hvtran", async (req, res) => {
 // ========== Start Server ==========
 async function startServer() {
   const PORT = process.env.PORT || 4000;
-  
+
   console.log(`Starting server on port ${PORT}...`);
-  
+
   // Initialize database connection first - REQUIRED
   try {
     console.log("Attempting database connection...");
     await initializeDatabase();
     console.log("✓ Database connected successfully");
-    
+
     // Only start server after successful database connection
     app.listen(PORT, () => {
       console.log(`✓ Server running on http://localhost:${PORT}`);
@@ -331,11 +331,11 @@ async function startServer() {
 }
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('Shutting down gracefully...');
+process.on("SIGINT", async () => {
+  console.log("Shutting down gracefully...");
   if (globalPool) {
     await globalPool.close();
-    console.log('Database connection closed');
+    console.log("Database connection closed");
   }
   process.exit(0);
 });
