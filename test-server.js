@@ -3,7 +3,10 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
+
+app.use(
+  cors({ origin: ["https://lmrkmayura.vercel.app/", "http://localhost:5175/"] })
+);
 app.use(express.json());
 
 console.log("Starting server...");
@@ -13,7 +16,7 @@ app.get("/api/health", (req, res) => {
   res.json({
     server: "running",
     database: "testing",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -21,15 +24,15 @@ app.get("/api/branches", (req, res) => {
   console.log("Branches requested");
   const mockBranches = [
     "HEAD OFFICE",
-    "MAIN BRANCH", 
+    "MAIN BRANCH",
     "BRANCH 1",
     "BRANCH 2",
-    "BRANCH 3"
+    "BRANCH 3",
   ];
-  
-  res.json({ 
+
+  res.json({
     branches: mockBranches,
-    warning: "Using mock data - database not available"
+    warning: "Using mock data - database not available",
   });
 });
 
