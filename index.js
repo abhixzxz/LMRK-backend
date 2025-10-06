@@ -4,10 +4,6 @@ const sql = require("mssql");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
-app.use(
-  cors({ origin: ["https://lmrkmayura.vercel.app/", "http://localhost:5175/"] })
-);
-
 // Validate required environment variables
 const requiredEnvVars = ["DB_USER", "DB_PASSWORD", "DB_SERVER", "DB_NAME"];
 for (const envVar of requiredEnvVars) {
@@ -18,6 +14,14 @@ for (const envVar of requiredEnvVars) {
 }
 
 const app = express();
+
+app.get("/", (req, res) => {
+  res.send("CORS is wide open! 🌍");
+});
+
+app.use(
+  cors({ origin: ["https://lmrkmayura.vercel.app/", "http://localhost:5175/"] })
+);
 
 // Security middleware
 app.use((req, res, next) => {
