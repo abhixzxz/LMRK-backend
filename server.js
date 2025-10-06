@@ -5,10 +5,12 @@ require("dotenv").config();
 
 const app = express();
 
-app.use(
-  cors({ origin: ["https://lmrkmayura.vercel.app/", "http://localhost:5175/"] })
-);
+app.use(cors({ origin: "*" }));
+
 app.use(express.json());
+app.get("/", (req, res) => {
+  res.send("CORS is wide open!  vx🌍");
+});
 
 // MS SQL config
 const config = {

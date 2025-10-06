@@ -14,14 +14,11 @@ for (const envVar of requiredEnvVars) {
 }
 
 const app = express();
+app.use(cors({ origin: "*" }));
 
 app.get("/", (req, res) => {
-  res.send("CORS is wide open! 🌍");
+  res.send("CORS is wide open!  v1🌍");
 });
-
-app.use(
-  cors({ origin: ["https://lmrkmayura.vercel.app/", "http://localhost:5175/"] })
-);
 
 // Security middleware
 app.use((req, res, next) => {
