@@ -14,7 +14,7 @@ for (const envVar of requiredEnvVars) {
 }
 
 const app = express();
-app.use(cors({ origin: "*" }));
+// Removed: app.use(cors({ origin: "*" })); - replaced by more specific CORS configuration below
 
 app.get("/", (req, res) => {
   res.send("CORS is wide open!  v1🌍");
@@ -48,6 +48,7 @@ app.use(
       "http://localhost:5176",
       "http://localhost:5177",
       "http://localhost:3000",
+      "https://lmrkmayura.vercel.app"
     ], // Only allow specific origins
     credentials: true, // Allow cookies and authorization headers
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
