@@ -4,7 +4,10 @@ const sql = require("mssql");
 require("dotenv").config();
 
 const app = express();
-app.use(cors({ origin: "*" }));
+
+app.use(
+  cors({ origin: ["https://lmrkmayura.vercel.app/", "http://localhost:5175/"] })
+);
 app.use(express.json());
 
 const config = {
@@ -17,7 +20,7 @@ const config = {
     trustServerCertificate: true,
   },
   connectionTimeout: 5000, // 5 second timeout
-  requestTimeout: 10000,   // 10 second timeout
+  requestTimeout: 10000, // 10 second timeout
 };
 
 // Global connection pool
@@ -29,7 +32,7 @@ async function initializeDatabase() {
     if (globalPool) {
       return globalPool;
     }
-    
+
     console.log("Connecting to database...");
     globalPool = await sql.connect(config);
     console.log("Database connected successfully");
@@ -58,7 +61,7 @@ app.get("/api/health", (req, res) => {
   const status = {
     server: "running",
     database: globalPool ? "connected" : "disconnected",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
   res.json(status);
 });
@@ -86,7 +89,7 @@ app.post("/api/login", async (req, res) => {
          AND User_Password = @password`
       );
     console.log("Login attempt for:", username);
-    
+
     if (result.recordset.length > 0) {
       res.json(result.recordset[0]);
     } else {
@@ -96,7 +99,9 @@ app.post("/api/login", async (req, res) => {
     }
   } catch (err) {
     console.error("Database error during login:", err.message);
-    res.status(500).json({ message: "Database connection error during login." });
+    res
+      .status(500)
+      .json({ message: "Database connection error during login." });
   }
 });
 
@@ -134,7 +139,9 @@ app.post("/api/issues", async (req, res) => {
     res.status(200).json({ message: "Issue inserted successfully" });
   } catch (err) {
     console.error("Database error during issue insertion:", err.message);
-    res.status(500).json({ error: "Database connection error during issue insertion." });
+    res
+      .status(500)
+      .json({ error: "Database connection error during issue insertion." });
   }
 });
 
@@ -147,7 +154,9 @@ app.post("/api/complaint-report", async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("Error executing ComplaintRegister_Sp:", err.message);
-    res.status(500).json({ message: "Failed to fetch complaint report from database." });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch complaint report from database." });
   }
 });
 
@@ -158,14 +167,16 @@ app.get("/api/branches", async (req, res) => {
     const result = await pool
       .request()
       .query("SELECT Br_Name FROM Gen_BranchDetails_P_Tbl");
-    
+
     // Extract branch names from the result
-    const branches = result.recordset.map(record => record.Br_Name);
-    
+    const branches = result.recordset.map((record) => record.Br_Name);
+
     res.json({ branches });
   } catch (err) {
     console.error("Error fetching branches:", err.message);
-    res.status(500).json({ message: "Failed to fetch branch list from database." });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch branch list from database." });
   }
 });
 
@@ -183,7 +194,7 @@ app.post("/api/reports/high-value", async (req, res) => {
     } = req.body;
 
     const pool = await getDbConnection();
-    
+
     // Replace with your actual stored procedure or query
     const result = await pool
       .request()
@@ -199,22 +210,26 @@ app.post("/api/reports/high-value", async (req, res) => {
     res.json({ rows: result.recordset });
   } catch (err) {
     console.error("Error fetching high value transactions:", err.message);
-    res.status(500).json({ message: "Failed to fetch high value transaction report from database." });
+    res
+      .status(500)
+      .json({
+        message: "Failed to fetch high value transaction report from database.",
+      });
   }
 });
 
 // ========== Start Server ==========
 async function startServer() {
   const PORT = process.env.PORT || 4000;
-  
+
   console.log(`Starting server on port ${PORT}...`);
-  
+
   // Initialize database connection first - REQUIRED
   try {
     console.log("Attempting database connection...");
     await initializeDatabase();
     console.log("✓ Database connected successfully");
-    
+
     // Only start server after successful database connection
     app.listen(PORT, () => {
       console.log(`✓ Server running on http://localhost:${PORT}`);
@@ -228,11 +243,11 @@ async function startServer() {
 }
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('Shutting down gracefully...');
+process.on("SIGINT", async () => {
+  console.log("Shutting down gracefully...");
   if (globalPool) {
     await globalPool.close();
-    console.log('Database connection closed');
+    console.log("Database connection closed");
   }
   process.exit(0);
 });

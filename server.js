@@ -5,7 +5,9 @@ require("dotenv").config();
 
 const app = express();
 
-app.use(cors({ origin: "*" }));
+app.use(
+  cors({ origin: ["https://lmrkmayura.vercel.app/", "http://localhost:5175/"] })
+);
 app.use(express.json());
 
 // MS SQL config
