@@ -4,6 +4,8 @@ const sql = require("mssql");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
+app.use(cors({ origin: "*" }));
+
 // Validate required environment variables
 const requiredEnvVars = ["DB_USER", "DB_PASSWORD", "DB_SERVER", "DB_NAME"];
 for (const envVar of requiredEnvVars) {
@@ -173,7 +175,6 @@ app.post("/api/login", async (req, res) => {
 // API Endpoint 2: Get report data by executing the stored procedure
 
 // ========== Complaint Report API ==========
-
 
 // ========== High Value Transaction Report API ==========
 
@@ -786,7 +787,6 @@ app.post("/api/userright-transfer", authenticateToken, async (req, res) => {
   }
 });
 
-
 // ========== Cancelled Scrolls Report APIs ==========
 
 // Get sections for cancelled scrolls report
@@ -836,8 +836,6 @@ app.post("/api/schemes", async (req, res) => {
     });
   }
 });
-
-
 
 // ========== HIGH VALUE TRANSACTIONS REPORT API ==================
 app.post("/api/high-value-trans", optionalAuthForReports, async (req, res) => {
@@ -962,9 +960,6 @@ app.post("/api/high-value-trans", optionalAuthForReports, async (req, res) => {
     });
   }
 });
-
-
-
 
 // API endpoint to save document data to Document_Tbl
 app.post("/api/document", optionalAuthForReports, async (req, res) => {
@@ -1163,8 +1158,6 @@ app.get("/api/document/:id", async (req, res) => {
 
 // API endpoint to modify existing document
 
-   
-
 // ========== ReportDocument API Endpoints ==========
 
 // GET /api/ProgrammeName - Get programme names from TimeSlots_tbl
@@ -1341,67 +1334,67 @@ app.post("/api/updateAttendMember", async (req, res) => {
 });
 
 // API endpoint to get row styling rules for CSS grid line coloring
-app.get('/api/rowStyling', optionalAuthForReports, async (req, res) => {
-  console.log('GET /api/rowStyling - Start');
-  
+app.get("/api/rowStyling", optionalAuthForReports, async (req, res) => {
+  console.log("GET /api/rowStyling - Start");
+
   try {
     if (!globalPool) {
-      throw new Error('Database connection not available');
+      throw new Error("Database connection not available");
     }
 
     // Define the styling rules based on your database conditions
     const stylingRules = {
       rules: [
         {
-          name: 'mismatchAttended',
-          description: 'AtnPersons ≠ RegPersons AND Status = A',
-          condition: 'mismatch_attended',
-          color: '#e3f2fd', // Light blue background
-          borderColor: '#2196f3', // Blue border
-          textColor: '#0d47a1', // Dark blue text
-          query: "SELECT RegPersons, AtnPersons, Status FROM RegMember_Details_Tbl WHERE (AtnPersons <> RegPersons) AND status = 'A'"
+          name: "mismatchAttended",
+          description: "AtnPersons ≠ RegPersons AND Status = A",
+          condition: "mismatch_attended",
+          color: "#e3f2fd", // Light blue background
+          borderColor: "#2196f3", // Blue border
+          textColor: "#0d47a1", // Dark blue text
+          query:
+            "SELECT RegPersons, AtnPersons, Status FROM RegMember_Details_Tbl WHERE (AtnPersons <> RegPersons) AND status = 'A'",
         },
         {
-          name: 'attended',
-          description: 'Status = A (Attended)',
-          condition: 'attended',
-          color: '#ffebee', // Light red background  
-          borderColor: '#f44336', // Red border
-          textColor: '#b71c1c', // Dark red text
-          query: "SELECT Status FROM RegMember_Details_Tbl WHERE status = 'A'"
+          name: "attended",
+          description: "Status = A (Attended)",
+          condition: "attended",
+          color: "#ffebee", // Light red background
+          borderColor: "#f44336", // Red border
+          textColor: "#b71c1c", // Dark red text
+          query: "SELECT Status FROM RegMember_Details_Tbl WHERE status = 'A'",
         },
         {
-          name: 'registered',
-          description: 'Status = R (Registered)', 
-          condition: 'registered',
-          color: '#e8f5e8', // Light green background
-          borderColor: '#4caf50', // Green border
-          textColor: '#2e7d32', // Dark green text
-          query: "SELECT Status FROM RegMember_Details_Tbl WHERE status = 'R'"
-        }
+          name: "registered",
+          description: "Status = R (Registered)",
+          condition: "registered",
+          color: "#e8f5e8", // Light green background
+          borderColor: "#4caf50", // Green border
+          textColor: "#2e7d32", // Dark green text
+          query: "SELECT Status FROM RegMember_Details_Tbl WHERE status = 'R'",
+        },
       ],
-      priority: ['mismatchAttended', 'attended', 'registered'], // Higher priority rules first
+      priority: ["mismatchAttended", "attended", "registered"], // Higher priority rules first
       default: {
-        color: '#ffffff', // White background
-        borderColor: '#e0e0e0', // Light gray border
-        textColor: '#333333' // Dark gray text
-      }
+        color: "#ffffff", // White background
+        borderColor: "#e0e0e0", // Light gray border
+        textColor: "#333333", // Dark gray text
+      },
     };
 
-    console.log('✅ Row styling rules generated successfully');
-    
+    console.log("✅ Row styling rules generated successfully");
+
     res.json({
       success: true,
-      message: 'Row styling rules retrieved successfully',
-      data: stylingRules
+      message: "Row styling rules retrieved successfully",
+      data: stylingRules,
     });
-
   } catch (err) {
-    console.error('❌ Error in /api/rowStyling:', err);
+    console.error("❌ Error in /api/rowStyling:", err);
     res.status(500).json({
       success: false,
-      message: 'Failed to get row styling rules',
-      error: err.message
+      message: "Failed to get row styling rules",
+      error: err.message,
     });
   }
 });
@@ -1414,12 +1407,16 @@ app.post("/api/regMembersReport", async (req, res) => {
     console.log("🔍 Executing RegMembersReport_Sp with params:", {
       programmeName,
       timeSlots,
-      optionValue
+      optionValue,
     });
 
     // Validate required parameters
     if (!programmeName || !timeSlots || optionValue === undefined) {
-      console.log("❌ Missing required parameters:", { programmeName, timeSlots, optionValue });
+      console.log("❌ Missing required parameters:", {
+        programmeName,
+        timeSlots,
+        optionValue,
+      });
       return res.status(400).json({
         message: "Programme name, time slots, and option value are required.",
         error: "Missing parameters",
@@ -1444,7 +1441,7 @@ app.post("/api/regMembersReport", async (req, res) => {
       WHERE ROUTINE_TYPE = 'PROCEDURE' 
       AND ROUTINE_NAME = 'RegMembersReport_Sp'
     `);
-    
+
     console.log("🔍 Stored procedure check result:", checkProcedure.recordset);
 
     const result = await request
@@ -1465,7 +1462,9 @@ app.post("/api/regMembersReport", async (req, res) => {
 
     res.json({
       success: true,
-      message: `Report generated successfully for ${optionValue === 1 ? 'Admitted' : 'Register'} members`,
+      message: `Report generated successfully for ${
+        optionValue === 1 ? "Admitted" : "Register"
+      } members`,
       data: result.recordset || [],
       recordCount: result.recordset ? result.recordset.length : 0,
     });
@@ -1486,17 +1485,23 @@ app.get("/api/timeslots-for-registration", async (req, res) => {
   try {
     console.log("🔍 Fetching time slots for registration...");
     const pool = await getDbConnection();
-    
-    const result = await pool.request().query(
-      "SELECT [TimeSlots] FROM [dbo].[TimeSlots_tbl] WHERE [TimeSlots] <> 'ALL'"
+
+    const result = await pool
+      .request()
+      .query(
+        "SELECT [TimeSlots] FROM [dbo].[TimeSlots_tbl] WHERE [TimeSlots] <> 'ALL'"
+      );
+
+    const timeSlots = result.recordset.map((record) => record.TimeSlots);
+    console.log(
+      "✅ Time slots fetched successfully:",
+      timeSlots.length,
+      "records"
     );
-    
-    const timeSlots = result.recordset.map(record => record.TimeSlots);
-    console.log("✅ Time slots fetched successfully:", timeSlots.length, "records");
-    
-    res.json({ 
-      success: true, 
-      timeSlots: timeSlots
+
+    res.json({
+      success: true,
+      timeSlots: timeSlots,
     });
   } catch (err) {
     console.error("❌ Error fetching registration time slots:", err.message);
@@ -1513,7 +1518,12 @@ app.post("/api/register-member", async (req, res) => {
   try {
     const { name, phone, noOfPerson, timeSlot } = req.body;
 
-    console.log("🔍 Register member request:", { name, phone, noOfPerson, timeSlot });
+    console.log("🔍 Register member request:", {
+      name,
+      phone,
+      noOfPerson,
+      timeSlot,
+    });
 
     // Basic validation
     if (!name || !phone || !noOfPerson || !timeSlot) {
@@ -1524,9 +1534,11 @@ app.post("/api/register-member", async (req, res) => {
     }
 
     const pool = await getDbConnection();
-    
-    console.log("📡 Executing stored procedure: [dbo].[InsertUpdate_RegMaster_Sp]");
-    
+
+    console.log(
+      "📡 Executing stored procedure: [dbo].[InsertUpdate_RegMaster_Sp]"
+    );
+
     const result = await pool
       .request()
       .input("Name", sql.VarChar(100), name)
